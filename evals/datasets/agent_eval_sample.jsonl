@@ -1,0 +1,2 @@
+{"id":"agent-001","question":"What is the refund policy?","expected_tool":"retriever","expected_source":"mock_policy.md","expected_keywords":["refund","policy"],"max_steps":3,"timeout_ms":2000}
+{"id":"agent-002","question":"hello","expected_tool":null,"expected_source":null,"expected_keywords":["Direct mock answer"],"max_steps":3,"timeout_ms":2000}

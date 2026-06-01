@@ -1,0 +1,5 @@
+﻿dataset_path: evals/datasets/rag_qa_sample.jsonl
+report_path: evals/reports/latest_report.json
+use_rag: true
+top_k: 3
+min_keyword_score: 1.0
