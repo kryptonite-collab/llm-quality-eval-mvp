@@ -34,7 +34,7 @@ def get_rag_services() -> tuple[
 
     Creates and returns all necessary RAG service components:
     - Settings (RAG configuration)
-    - Vector store (Milvus)
+    - Vector store (ChromaDB)
     - Document processor
     - Retrieval service
     - Ingestion service
@@ -55,7 +55,7 @@ async def list_collections_async(vector_store: BaseVectorStore) -> None:
     """List all collections with their stats.
 
     Args:
-        vector_store: The Milvus vector store to query.
+        vector_store: The ChromaDB vector store to query.
     """
     collection_names = await vector_store.list_collections()
 
@@ -100,7 +100,7 @@ async def ingest_path_async(
         path: Path to a file or directory to ingest.
         collection: Target collection name.
         recursive: Whether to recursively process directories.
-        vector_store: The Milvus vector store.
+        vector_store: The ChromaDB vector store.
         processor: Document processor for parsing files.
         ingestion: Ingestion service for storing documents.
     """
@@ -158,7 +158,7 @@ async def ingest_path_async(
 
                 if sync_mode == "new_only":
                     if existing_id:
-                        # File exists — check if content changed via hash
+                        # File exists 鈥?check if content changed via hash
                         file_hash: str = hashlib.sha256(filepath.read_bytes()).hexdigest()
                         existing_hash: str | None = await ingestion.get_existing_hash(
                             collection, source_path
@@ -166,11 +166,11 @@ async def ingest_path_async(
                         if existing_hash and file_hash == existing_hash:
                             skipped_count += 1
                             continue
-                        # Hash changed — will re-ingest below
+                        # Hash changed 鈥?will re-ingest below
 
                 elif sync_mode == "update_only":
                     if not existing_id:
-                        # Not in collection — skip (update_only ignores new files)
+                        # Not in collection 鈥?skip (update_only ignores new files)
                         skipped_count += 1
                         continue
                     file_hash = hashlib.sha256(filepath.read_bytes()).hexdigest()
@@ -189,10 +189,10 @@ async def ingest_path_async(
                         replaced_count += 1
                 else:
                     error_count += 1
-                    tqdm.write(f"  ✗ {filepath.name}: {result.error_message}")
+                    tqdm.write(f"  鉁?{filepath.name}: {result.error_message}")
             except Exception as e:
                 error_count += 1
-                tqdm.write(f"  ✗ {filepath.name}: {e!s}")
+                tqdm.write(f"  鉁?{filepath.name}: {e!s}")
 
     click.echo()
     msg = f"Done: {success_count} ingested"
@@ -328,7 +328,7 @@ async def drop_collection_async(collection: str, yes: bool, vector_store: BaseVe
     Args:
         collection: Name of the collection to drop.
         yes: Whether to skip confirmation prompt.
-        vector_store: The Milvus vector store.
+        vector_store: The ChromaDB vector store.
     """
     if not yes:
         click.confirm(
@@ -378,7 +378,7 @@ async def stats_async(settings: RAGSettings, vector_store: BaseVectorStore) -> N
 
     Args:
         settings: RAG configuration settings.
-        vector_store: The Milvus vector store.
+        vector_store: The ChromaDB vector store.
     """
     click.echo("RAG System Statistics")
     click.echo("=" * 40)

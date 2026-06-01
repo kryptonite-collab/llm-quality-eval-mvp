@@ -79,7 +79,7 @@ class RetrievalService(BaseRetrievalService):
         settings: RAGSettings,
         rerank_service: RerankService | None = None,
     ):
-        """Initialize the Milvus retrieval service.
+        """Initialize the ChromaDB retrieval service.
 
         Args:
             vector_store: The vector store to query.
@@ -262,7 +262,7 @@ class RetrievalService(BaseRetrievalService):
         # Cosine similarity is higher = better.
         filtered_results = [res for res in results if res.score >= min_score]
 
-        # Step 4: Deduplicate — keep highest-scored result per unique chunk
+        # Step 4: Deduplicate 鈥?keep highest-scored result per unique chunk
         seen_keys: set[str] = set()
         deduped_results: list[SearchResult] = []
         for r in filtered_results:

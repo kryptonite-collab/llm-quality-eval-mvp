@@ -206,7 +206,7 @@ class ChromaVectorStore(BaseVectorStore):
                 "n_results": limit,
                 "include": ["documents", "metadatas", "distances"],
             }
-            # Convert Milvus-style filter to ChromaDB where clause
+            # Convert ChromaDB-style filter to ChromaDB where clause
             if filter and "parent_doc_id" in filter:
                 import re
 
