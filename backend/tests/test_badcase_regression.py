@@ -6,7 +6,6 @@ from app.services.badcase import load_badcase_jsonl
 from app.services.llm_qa import LLMQAService
 from app.services.metrics import evaluate_qa_result
 
-
 BADCASE_SAMPLES = [
     {
         "id": "q101",
@@ -45,11 +44,7 @@ BADCASE_SAMPLES = [
 
 def _write_badcases_jsonl(path):
     path.write_text(
-        "\n".join(
-            json.dumps(sample, ensure_ascii=False)
-            for sample in BADCASE_SAMPLES
-        )
-        + "\n",
+        "\n".join(json.dumps(sample, ensure_ascii=False) for sample in BADCASE_SAMPLES) + "\n",
         encoding="utf-8",
     )
 

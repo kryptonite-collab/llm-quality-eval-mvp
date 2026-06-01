@@ -1,10 +1,9 @@
-﻿import json
+import json
 
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.services import badcase as badcase_service_module
-
 
 client = TestClient(app)
 
@@ -157,10 +156,7 @@ def test_export_badcases(monkeypatch, tmp_path):
 
     assert export_path.exists()
 
-    exported = [
-        json.loads(line)
-        for line in export_path.read_text(encoding="utf-8").splitlines()
-    ]
+    exported = [json.loads(line) for line in export_path.read_text(encoding="utf-8").splitlines()]
 
     assert len(exported) == data["total"]
     assert len(exported) == len(data["items"])

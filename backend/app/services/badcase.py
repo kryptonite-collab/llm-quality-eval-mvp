@@ -5,7 +5,6 @@ from typing import Any
 from app.services.llm_qa import LLMQAService
 from app.services.metrics import evaluate_qa_result
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_REPORT_PATH = PROJECT_ROOT / "evals/reports/latest_report.json"
 DEFAULT_EXPORT_PATH = PROJECT_ROOT / "evals/badcases/badcases.jsonl"
@@ -71,10 +70,7 @@ class BadcaseService:
 
     def list_badcases(self) -> list[dict[str, Any]]:
         report = self._load_report()
-        return [
-            self._normalize_badcase(badcase)
-            for badcase in report.get("badcases", [])
-        ]
+        return [self._normalize_badcase(badcase) for badcase in report.get("badcases", [])]
 
     def get_badcase(self, badcase_id: str) -> dict[str, Any] | None:
         for badcase in self.list_badcases():
@@ -133,10 +129,7 @@ class BadcaseService:
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         badcases = [
-            {
-                field: self._normalize_badcase(badcase).get(field)
-                for field in BADCASE_EXPORT_FIELDS
-            }
+            {field: self._normalize_badcase(badcase).get(field) for field in BADCASE_EXPORT_FIELDS}
             for badcase in self.list_badcases()
         ]
 
@@ -164,8 +157,6 @@ def load_badcase_jsonl(path: str | Path) -> list[dict[str, Any]]:
             try:
                 badcases.append(json.loads(stripped_line))
             except json.JSONDecodeError as exc:
-                raise ValueError(
-                    f"Invalid badcase JSONL at line {line_number}: {exc}"
-                ) from exc
+                raise ValueError(f"Invalid badcase JSONL at line {line_number}: {exc}") from exc
 
     return badcases

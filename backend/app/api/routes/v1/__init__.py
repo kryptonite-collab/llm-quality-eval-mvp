@@ -1,4 +1,4 @@
-﻿"""API v1 router aggregation."""
+"""API v1 router aggregation."""
 # ruff: noqa: I001 - Imports structured for Jinja2 template conditionals
 
 from fastapi import APIRouter
@@ -57,4 +57,3 @@ v1_router.include_router(
     me_slash_commands.router, prefix="/me/slash-commands", tags=["me:slash-commands"]
 )
 v1_router.include_router(admin_stats.router, prefix="/admin", tags=["admin:stats"])
-

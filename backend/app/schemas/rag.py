@@ -73,6 +73,7 @@ class RAGMessageResponse(BaseModel):
 
     message: str
 
+
 # Compatibility schemas for tracked RAG documents.
 # These models are used by app/services/rag_document.py.
 
@@ -101,6 +102,7 @@ class RAGTrackedDocumentItem(BaseModel):
 class RAGTrackedDocumentList(BaseModel):
     items: list[RAGTrackedDocumentItem]
     total: int
+
 
 # Compatibility schemas for RAG sync / ingest APIs.
 # These are minimal models to fix generated-template import errors first.

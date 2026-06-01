@@ -1,4 +1,4 @@
-﻿import json
+import json
 
 from app.services.eval_runner import load_eval_dataset, run_eval_dataset
 

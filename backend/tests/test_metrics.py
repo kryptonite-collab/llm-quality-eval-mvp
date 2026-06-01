@@ -37,10 +37,13 @@ def test_check_source_hit_true():
         }
     ]
 
-    assert check_source_hit(
-        contexts=contexts,
-        expected_source="mock_policy.md",
-    ) is True
+    assert (
+        check_source_hit(
+            contexts=contexts,
+            expected_source="mock_policy.md",
+        )
+        is True
+    )
 
 
 def test_check_source_hit_false():
@@ -52,10 +55,13 @@ def test_check_source_hit_false():
         }
     ]
 
-    assert check_source_hit(
-        contexts=contexts,
-        expected_source="mock_policy.md",
-    ) is False
+    assert (
+        check_source_hit(
+            contexts=contexts,
+            expected_source="mock_policy.md",
+        )
+        is False
+    )
 
 
 def test_check_source_hit_at_k_alias():
@@ -67,10 +73,13 @@ def test_check_source_hit_at_k_alias():
         }
     ]
 
-    assert check_source_hit_at_k(
-        contexts=contexts,
-        expected_source="mock_policy.md",
-    ) is True
+    assert (
+        check_source_hit_at_k(
+            contexts=contexts,
+            expected_source="mock_policy.md",
+        )
+        is True
+    )
 
 
 def test_evaluate_qa_result_pass():

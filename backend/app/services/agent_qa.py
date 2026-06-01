@@ -4,7 +4,6 @@ from typing import Any
 from app.services.agent_metrics import evaluate_agent_result
 from app.services.agent_tools import mock_retriever
 
-
 RETRIEVAL_KEYWORDS = (
     "policy",
     "refund",

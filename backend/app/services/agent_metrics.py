@@ -1,6 +1,5 @@
 from typing import Any
 
-
 REQUIRED_TRACE_START = ("received_question", "decide_tool")
 REQUIRED_TRACE_END = "generate_final_answer"
 
@@ -50,9 +49,7 @@ def calculate_answer_keyword_recall(
 
     normalized_answer = final_answer.lower()
     matched_count = sum(
-        1
-        for keyword in expected_keywords
-        if keyword.lower().strip() in normalized_answer
+        1 for keyword in expected_keywords if keyword.lower().strip() in normalized_answer
     )
 
     return round(matched_count / len(expected_keywords), 4)

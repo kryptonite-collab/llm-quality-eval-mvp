@@ -102,9 +102,7 @@ class DeterministicEmbeddingProvider(BaseEmbeddingProvider):
         vectors: list[list[float]] = []
         for text in texts:
             digest = sha256(text.encode("utf-8")).digest()
-            vectors.append(
-                [digest[index % len(digest)] / 255.0 for index in range(self.dim)]
-            )
+            vectors.append([digest[index % len(digest)] / 255.0 for index in range(self.dim)])
         return vectors
 
     def embed_document(self, document: Document) -> list[list[float]]:

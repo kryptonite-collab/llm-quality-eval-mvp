@@ -7,7 +7,6 @@ from typing import Any
 from app.services.llm_qa import LLMQAService
 from app.services.metrics import evaluate_qa_result
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG_PATH = PROJECT_ROOT / "evals/config.yaml"
 
@@ -84,9 +83,7 @@ def load_eval_dataset(dataset_path: str | Path) -> list[dict[str, Any]]:
             try:
                 sample = json.loads(stripped_line)
             except json.JSONDecodeError as exc:
-                raise ValueError(
-                    f"Invalid JSONL at line {line_number}: {exc}"
-                ) from exc
+                raise ValueError(f"Invalid JSONL at line {line_number}: {exc}") from exc
 
             samples.append(sample)
 
@@ -131,10 +128,7 @@ def _infer_badcase_type(sample: dict[str, Any], eval_result: dict[str, Any]) -> 
 def _build_badcase_type_distribution(
     badcases: list[dict[str, Any]],
 ) -> dict[str, int]:
-    counter = Counter(
-        str(badcase.get("badcase_type") or "unknown")
-        for badcase in badcases
-    )
+    counter = Counter(str(badcase.get("badcase_type") or "unknown") for badcase in badcases)
 
     return dict(sorted(counter.items()))
 
@@ -182,9 +176,7 @@ def run_eval_dataset(
     actual_use_rag = bool(config["use_rag"] if use_rag is None else use_rag)
     actual_top_k = int(config["top_k"] if top_k is None else top_k)
     actual_min_keyword_score = float(
-        config["min_keyword_score"]
-        if min_keyword_score is None
-        else min_keyword_score
+        config["min_keyword_score"] if min_keyword_score is None else min_keyword_score
     )
 
     samples = load_eval_dataset(actual_dataset_path)
@@ -268,20 +260,10 @@ def run_eval_dataset(
     pass_rate = passed / total if total else 0.0
     avg_latency_ms = total_latency / total if total else 0.0
 
-    source_expected_results = [
-        item
-        for item in results
-        if item.get("expected_source")
-    ]
-    source_hit_count = sum(
-        1
-        for item in source_expected_results
-        if item["source_hit_at_k"]
-    )
+    source_expected_results = [item for item in results if item.get("expected_source")]
+    source_hit_count = sum(1 for item in source_expected_results if item["source_hit_at_k"])
     source_hit_rate = (
-        source_hit_count / len(source_expected_results)
-        if source_expected_results
-        else 0.0
+        source_hit_count / len(source_expected_results) if source_expected_results else 0.0
     )
 
     badcase_type_distribution = _build_badcase_type_distribution(badcases)

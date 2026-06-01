@@ -1,11 +1,10 @@
-﻿import json
+import json
 
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.services.eval_runner import run_eval_dataset
 from app.services import badcase as badcase_service_module
-
+from app.services.eval_runner import run_eval_dataset
 
 client = TestClient(app)
 

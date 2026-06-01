@@ -1,4 +1,4 @@
-﻿from typing import Any
+from typing import Any
 
 
 def _normalize_text(value: str) -> str:
@@ -109,10 +109,7 @@ def evaluate_qa_result(
         expected_source=expected_source,
     )
 
-    passed = (
-        keyword_result["keyword_score"] >= min_keyword_score
-        and source_hit_at_k
-    )
+    passed = keyword_result["keyword_score"] >= min_keyword_score and source_hit_at_k
     failed_metrics = _collect_failed_metrics(
         keyword_score=keyword_result["keyword_score"],
         source_hit_at_k=source_hit_at_k,
@@ -122,10 +119,7 @@ def evaluate_qa_result(
     reasons: list[str] = []
 
     if keyword_result["missing_keywords"]:
-        reasons.append(
-            "missing keywords: "
-            + ", ".join(keyword_result["missing_keywords"])
-        )
+        reasons.append("missing keywords: " + ", ".join(keyword_result["missing_keywords"]))
 
     if not source_hit:
         reasons.append(f"expected source not hit: {expected_source}")
