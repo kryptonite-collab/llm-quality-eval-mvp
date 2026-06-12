@@ -1,4 +1,6 @@
+import argparse
 import json
+import os
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
@@ -6,9 +8,24 @@ from typing import Any
 
 from app.services.llm_qa import LLMQAService
 from app.services.metrics import evaluate_qa_result
+from app.services.prompt_templates import normalize_prompt_version
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG_PATH = PROJECT_ROOT / "evals/config.yaml"
+
+
+def _format_report_path(path: str | Path) -> str:
+    input_path = Path(path)
+    if not input_path.is_absolute():
+        return input_path.as_posix()
+
+    resolved_path = input_path.resolve()
+    project_root = PROJECT_ROOT.resolve()
+
+    try:
+        return resolved_path.relative_to(project_root).as_posix()
+    except ValueError:
+        return str(path)
 
 
 def _parse_config_value(raw_value: str) -> str | bool | int | float:
@@ -119,6 +136,9 @@ def _infer_badcase_type(sample: dict[str, Any], eval_result: dict[str, Any]) -> 
     if failed_metrics == ["answer_keyword_recall"]:
         return "keyword_miss"
 
+    if failed_metrics == ["refusal_when_answer_expected"]:
+        return "refusal_when_answer_expected"
+
     if len(failed_metrics) > 1:
         return "multiple_metrics_failed"
 
@@ -166,6 +186,9 @@ def run_eval_dataset(
     use_rag: bool | None = None,
     top_k: int | None = None,
     min_keyword_score: float | None = None,
+    provider: str | None = None,
+    limit: int | None = None,
+    prompt_version: str | None = None,
     config_path: str | Path = DEFAULT_CONFIG_PATH,
 ) -> dict[str, Any]:
     """Run QA evaluation dataset and write a structured report."""
@@ -180,7 +203,17 @@ def run_eval_dataset(
     )
 
     samples = load_eval_dataset(actual_dataset_path)
-    qa_service = LLMQAService()
+    if limit is not None:
+        samples = samples[:limit]
+
+    actual_prompt_version = normalize_prompt_version(
+        prompt_version or os.getenv("LLM_PROMPT_VERSION")
+    )
+    qa_service = LLMQAService(
+        provider=provider,
+        prompt_version=actual_prompt_version,
+    )
+    provider_config = qa_service.provider.config
 
     results: list[dict[str, Any]] = []
     badcases: list[dict[str, Any]] = []
@@ -205,6 +238,7 @@ def run_eval_dataset(
             expected_source=expected_source,
             latency_ms=qa_result["latency_ms"],
             min_keyword_score=actual_min_keyword_score,
+            expected_behavior=sample.get("expected_behavior"),
         )
         badcase_type = _infer_badcase_type(sample, eval_result)
 
@@ -281,12 +315,19 @@ def run_eval_dataset(
         "top_failed_cases": top_failed_cases,
         "badcases": badcases,
         "results": results,
+        "provider": provider_config.provider,
+        "model": provider_config.model,
+        "generated_at": datetime.now(UTC).isoformat(),
         "config": {
-            "dataset_path": str(actual_dataset_path),
-            "report_path": str(actual_report_path),
+            "dataset_path": _format_report_path(actual_dataset_path),
+            "report_path": _format_report_path(actual_report_path),
             "use_rag": actual_use_rag,
             "top_k": actual_top_k,
             "min_keyword_score": actual_min_keyword_score,
+            "provider": provider_config.provider,
+            "model": provider_config.model,
+            "limit": limit,
+            "prompt_version": actual_prompt_version,
         },
     }
 
@@ -301,5 +342,29 @@ def run_eval_dataset(
 
 
 if __name__ == "__main__":
-    report = run_eval_dataset()
+    parser = argparse.ArgumentParser(description="Run an LLM QA evaluation dataset.")
+    parser.add_argument("--dataset-path", default=None)
+    parser.add_argument("--report-path", default=None)
+    parser.add_argument("--provider", default=None, choices=["mock", "deepseek", "openai"])
+    parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--use-rag", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--top-k", type=int, default=None)
+    parser.add_argument("--min-keyword-score", type=float, default=None)
+    parser.add_argument("--prompt-version", default=None, choices=["baseline", "improved"])
+    args = parser.parse_args()
+
+    report_path = args.report_path
+    if args.provider and args.provider != "mock" and report_path is None:
+        report_path = PROJECT_ROOT / f"evals/reports/real_{args.provider}_report.json"
+
+    report = run_eval_dataset(
+        dataset_path=args.dataset_path,
+        report_path=report_path,
+        provider=args.provider,
+        limit=args.limit,
+        use_rag=args.use_rag,
+        top_k=args.top_k,
+        min_keyword_score=args.min_keyword_score,
+        prompt_version=args.prompt_version,
+    )
     print(json.dumps(report, ensure_ascii=False, indent=2))

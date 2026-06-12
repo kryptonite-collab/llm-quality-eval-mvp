@@ -1,6 +1,18 @@
 import json
 
-from app.services.eval_runner import load_eval_dataset, run_eval_dataset
+from app.services.eval_runner import (
+    PROJECT_ROOT,
+    _format_report_path,
+    load_eval_dataset,
+    run_eval_dataset,
+)
+
+
+def test_format_report_path_prefers_project_relative_paths(tmp_path):
+    dataset_path = PROJECT_ROOT / "evals/datasets/rag_qa_sample.jsonl"
+
+    assert _format_report_path(dataset_path) == "evals/datasets/rag_qa_sample.jsonl"
+    assert _format_report_path(tmp_path / "sample.jsonl") == str(tmp_path / "sample.jsonl")
 
 
 def test_load_eval_dataset(tmp_path):
@@ -100,6 +112,26 @@ def test_run_eval_dataset_uses_config_file(tmp_path):
     assert report["config"]["use_rag"] is True
     assert report["config"]["top_k"] == 3
     assert report_path.exists()
+
+
+def test_run_eval_dataset_records_prompt_version(tmp_path):
+    dataset_path = tmp_path / "sample.jsonl"
+    report_path = tmp_path / "latest_report.json"
+
+    dataset_path.write_text(
+        '{"id":"q001","question":"test prompt version","expected_keywords":["test prompt version"],"expected_source":"mock_policy.md","category":"config"}\n',
+        encoding="utf-8",
+    )
+
+    report = run_eval_dataset(
+        dataset_path=dataset_path,
+        report_path=report_path,
+        use_rag=True,
+        prompt_version="improved",
+    )
+
+    assert report["config"]["prompt_version"] == "improved"
+    assert report["provider"] == "mock"
 
 
 def test_run_eval_dataset_reports_multiple_badcase_types(tmp_path):

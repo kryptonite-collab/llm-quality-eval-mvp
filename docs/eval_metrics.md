@@ -61,6 +61,24 @@ source_hit_rate =
 
 In the current sample report it is `1.0`, because the mock retriever always returns `mock_policy.md` for RAG mode. This does not represent real production RAG quality.
 
+## refusal_when_answer_expected
+
+`refusal_when_answer_expected` catches a common keyword-recall false positive.
+
+If a sample expects a direct answer (`expected_behavior=answer`) but the model says the context has no answer, the case fails even if the answer repeats expected keywords.
+
+Current phrase triggers include:
+
+```text
+context does not contain
+does not contain any information
+not provided in the context
+cannot find
+no relevant information
+```
+
+This is a lightweight rule, not a full semantic judge.
+
 ## latency_ms
 
 `latency_ms` records mock QA service latency.
@@ -145,6 +163,7 @@ This gives a quick triage view in the report.
 - Answers can contain keywords but still be wrong.
 - Source hit checks only filenames, not whether the answer is grounded.
 - Refusal quality is represented by expected keywords, not a true safety classifier.
+- `refusal_when_answer_expected` only catches explicit no-context phrases.
 - Latency is mock latency, not production latency.
 
 ## Future Metric Extensions

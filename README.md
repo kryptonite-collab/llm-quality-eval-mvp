@@ -20,7 +20,7 @@ JSONL evaluation dataset
   -> pytest regression
 ```
 
-The default configuration uses a **deterministic evaluation mode**. It does not call external LLM APIs, which keeps CI and regression runs stable. Real LLM, RAG, embedding, and vector-store integrations can replace the provider layer when needed.
+The default configuration uses a **deterministic evaluation mode**. It does not call external LLM APIs, which keeps CI and regression runs stable. Real LLM providers are available through an optional provider layer, with DeepSeek supported through an OpenAI-compatible API.
 
 Suitable roles:
 
@@ -62,6 +62,81 @@ Run the evaluation dataset from `backend/`:
 uv run python -m app.services.eval_runner
 ```
 
+## Optional Real Model Provider
+
+The default provider is `mock`, so ordinary local tests and GitHub Actions CI do not call external models.
+
+This repository also includes a small local RAG evaluation example:
+
+- Knowledge file: [`evals/knowledge/policy_sample.md`](evals/knowledge/policy_sample.md)
+- Dataset: [`evals/datasets/real_rag_sample.jsonl`](evals/datasets/real_rag_sample.jsonl)
+- Report target: [`evals/reports/real_deepseek_report.json`](evals/reports/real_deepseek_report.json)
+- Prompt templates: [`evals/prompts/`](evals/prompts/)
+
+The sample covers refund, support review, billing contact, cancellation, eligibility-window, source-hit, and unknown-knowledge refusal cases. It uses local Markdown context, not an external knowledge source.
+
+To run a small real-model evaluation with DeepSeek, configure environment variables in your shell or copy `.env.example` / `backend/.env.example` to `backend/.env` locally:
+
+```bash
+LLM_PROVIDER=deepseek
+LLM_MODEL=deepseek-v4-flash
+LLM_API_KEY=your_deepseek_api_key_here
+LLM_BASE_URL=https://api.deepseek.com
+```
+
+Then run from `backend/`:
+
+```bash
+uv run --env-file .env python -m app.services.eval_runner --provider deepseek --dataset-path ../evals/datasets/real_rag_sample.jsonl --limit 10 --report-path ../evals/reports/real_deepseek_report.json
+```
+
+or:
+
+```bash
+uv run python scripts/run_real_eval.py --provider deepseek --limit 5
+```
+
+The default real-model report path is:
+
+```text
+evals/reports/real_deepseek_report.json
+```
+
+Real LLM integration tests are skipped by default. They only run when both `RUN_REAL_LLM_TESTS=true` and an API key are set.
+
+This is still an MVP RAG case. It does not claim production-grade retrieval: full vector-store retrieval, reranking, LLM-as-a-judge, and large-scale evaluation are planned extensions.
+
+### Prompt A/B Evaluation
+
+The project includes two prompt versions:
+
+- `baseline`: ordinary QA style
+- `improved`: stricter RAG style, requiring context-grounded answers and explicit refusal when context is missing
+
+Run from `backend/` after configuring your local `.env`:
+
+```bash
+uv run --env-file .env python scripts/run_prompt_ab_eval.py --provider deepseek --limit 10
+```
+
+This writes:
+
+```text
+evals/reports/real_deepseek_baseline_report.json
+evals/reports/real_deepseek_improved_report.json
+evals/reports/real_deepseek_compare_report.json
+```
+
+The compare report shows pass-rate, latency, badcase count, improved cases, and regressed cases.
+
+Metric notes:
+
+- `answer_keyword_recall` checks keyword coverage only.
+- `source_hit_at_k` checks whether the expected context source was retrieved.
+- `refusal_when_answer_expected` prevents answers like "the context does not contain..." from passing just because they repeat keywords.
+- Full LLM-as-a-Judge is not implemented yet.
+- Future metrics can include faithfulness, answer relevancy, context precision, and context recall.
+
 ## Tests And Lint
 
 Run from `backend/`:
@@ -72,7 +147,7 @@ uv run --with ruff ruff check app tests
 uv run --with ruff ruff format app tests --check
 ```
 
-Tests set `TESTING=true`, so they do not initialize real ChromaDB, OpenAI, or embedding resources.
+Tests set `TESTING=true`, so they do not initialize real ChromaDB, OpenAI, embedding resources, or real LLM evaluation providers.
 
 ## Evaluation Report Example
 
