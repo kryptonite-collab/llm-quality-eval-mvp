@@ -1,4 +1,5 @@
 from app.services.llm_qa import LLMQAService
+from app.services.prompt_templates import load_prompt_template
 
 
 class StubProvider:
@@ -18,6 +19,7 @@ class StubProvider:
 def test_mock_provider_uses_deterministic_mock_context():
     service = LLMQAService.__new__(LLMQAService)
     service.provider = StubProvider(provider="mock")
+    service.prompt_template = load_prompt_template("baseline")
 
     result = service.ask(question="What is the refund policy?", use_rag=True)
 
@@ -27,6 +29,7 @@ def test_mock_provider_uses_deterministic_mock_context():
 def test_real_provider_uses_local_policy_sample_context():
     service = LLMQAService.__new__(LLMQAService)
     service.provider = StubProvider(provider="deepseek")
+    service.prompt_template = load_prompt_template("baseline")
 
     result = service.ask(question="What is the refund policy?", use_rag=True)
 

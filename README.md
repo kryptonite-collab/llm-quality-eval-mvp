@@ -4,6 +4,8 @@
 
 A portfolio project for testing development, LLM quality assurance, Agent intelligent testing, and LLM application testing platform roles.
 
+This is an MVP: a lightweight API + CLI + JSON/Markdown report toolchain, not a full web platform. A web dashboard can be added later if the workflow is productized.
+
 ## Project Positioning
 
 LLM applications fail in ways that traditional API tests do not fully cover: answers can miss required facts, retrieval can miss sources, refusal policies can fail, Agent tool calls can be wrong, and fixed badcases can return later.
@@ -12,7 +14,7 @@ This MVP turns those risks into a reproducible quality loop:
 
 ```text
 JSONL evaluation dataset
-  -> QA / Agent API
+  -> QA / RAG / Agent API
   -> automatic scoring
   -> report
   -> Badcase analysis
@@ -20,7 +22,9 @@ JSONL evaluation dataset
   -> pytest regression
 ```
 
-The default configuration uses a **deterministic evaluation mode**. It does not call external LLM APIs, which keeps CI and regression runs stable. Real LLM providers are available through an optional provider layer, with DeepSeek supported through an OpenAI-compatible API.
+The default configuration uses a **deterministic evaluation mode**. It does not call external LLM APIs, which keeps CI and regression runs stable. Real LLM providers are available through an optional provider layer, with DeepSeek supported through an OpenAI-compatible API for manual evaluation.
+
+The current RAG path is implemented as a local MVP chain: `policy_sample.md` is chunked into a minimal ChromaDB index with deterministic local embeddings and a safe fallback when ChromaDB is unavailable.
 
 Suitable roles:
 
@@ -33,7 +37,7 @@ Suitable roles:
 
 | Interface | Purpose |
 | --- | --- |
-| `POST /api/v1/eval/ask` | Execute a QA/RAG evaluation request |
+| `POST /api/v1/eval/ask` | Execute a QA/RAG/Agent evaluation request with `mode=qa`, `mode=rag`, or `mode=agent` |
 | `POST /api/v1/agent/eval` | Evaluate Agent answer, retrieval, and tool-call behavior |
 | `GET /api/v1/badcases` | List report badcases |
 | `GET /api/v1/badcases/{id}` | Inspect one badcase |
@@ -43,7 +47,8 @@ Suitable roles:
 ## Core Metrics
 
 - QA/RAG: `pass_rate`, `answer_keyword_recall`, `source_hit_at_k`, `source_hit_rate`, `avg_latency_ms`
-- Agent: `tool_called`, `tool_name_correct`, `source_hit_at_k`, `reasoning_trace_valid`, `timeout`, `pass`
+- ChromaDB retrieval: `content`, `source`, `score`, `rank`
+- Agent: `tool_call_accuracy`, `agent_source_hit`, `final_answer_keyword_recall`, `timeout`, `passed`
 - Badcase: type distribution, top failed cases, JSONL export, replay result
 
 ## Quick Start
@@ -73,9 +78,9 @@ This repository also includes a small local RAG evaluation example:
 - Report target: [`evals/reports/real_deepseek_report.json`](evals/reports/real_deepseek_report.json)
 - Prompt templates: [`evals/prompts/`](evals/prompts/)
 
-The sample covers refund, support review, billing contact, cancellation, eligibility-window, source-hit, and unknown-knowledge refusal cases. It uses local Markdown context, not an external knowledge source.
+The 50-case sample covers fact QA, source-hit, multi-section questions, no-answer refusal, irrelevant requests, abnormal input, keyword distractors, and wrong-refusal risk. It uses local Markdown context and a minimal local ChromaDB retrieval path, not an external knowledge source.
 
-To run a small real-model evaluation with DeepSeek, configure environment variables in your shell or copy `.env.example` / `backend/.env.example` to `backend/.env` locally:
+To run a small real-model evaluation with DeepSeek, configure environment variables locally. API keys must not be committed:
 
 ```bash
 LLM_PROVIDER=deepseek
@@ -104,7 +109,7 @@ evals/reports/real_deepseek_report.json
 
 Real LLM integration tests are skipped by default. They only run when both `RUN_REAL_LLM_TESTS=true` and an API key are set.
 
-This is still an MVP RAG case. It does not claim production-grade retrieval: full vector-store retrieval, reranking, LLM-as-a-judge, and large-scale evaluation are planned extensions.
+This is still an MVP RAG case. It includes a minimal ChromaDB local retriever, but does not claim production-grade retrieval: production chunking, embedding models, reranking, LLM-as-a-judge, and large-scale evaluation are planned extensions.
 
 ### Prompt A/B Evaluation
 
@@ -125,6 +130,7 @@ This writes:
 evals/reports/real_deepseek_baseline_report.json
 evals/reports/real_deepseek_improved_report.json
 evals/reports/real_deepseek_compare_report.json
+evals/reports/real_deepseek_compare_report.md
 ```
 
 The compare report shows pass-rate, latency, badcase count, improved cases, and regressed cases.
@@ -137,6 +143,16 @@ Metric notes:
 - Full LLM-as-a-Judge is not implemented yet.
 - Future metrics can include faithfulness, answer relevancy, context precision, and context recall.
 
+You can also check an existing report without calling a model:
+
+```bash
+uv run python scripts/check_eval_report.py --report-path ../evals/reports/real_deepseek_improved_report.json --min-pass-rate 0.7 --max-badcase-count 3
+```
+
+See [`docs/real_eval_runbook.md`](docs/real_eval_runbook.md) for the full manual runbook.
+
+For a sanitized explanation of how to read reports without running a real model, see [`docs/report_example.md`](docs/report_example.md). A fictional Markdown report example is available at [`evals/reports/sample_compare_report.md`](evals/reports/sample_compare_report.md).
+
 ## Tests And Lint
 
 Run from `backend/`:
@@ -147,7 +163,7 @@ uv run --with ruff ruff check app tests
 uv run --with ruff ruff format app tests --check
 ```
 
-Tests set `TESTING=true`, so they do not initialize real ChromaDB, OpenAI, embedding resources, or real LLM evaluation providers.
+Tests use mock provider behavior and local-only retrieval. They do not call DeepSeek, OpenAI, external embedding services, or real LLM evaluation providers.
 
 ## Evaluation Report Example
 
@@ -167,10 +183,12 @@ The checked-in sample report is [`evals/reports/latest_report.json`](evals/repor
 Sample evaluation assets:
 
 - Dataset: [`evals/datasets/rag_qa_sample.jsonl`](evals/datasets/rag_qa_sample.jsonl)
+- 50-case RAG dataset: [`evals/datasets/real_rag_sample.jsonl`](evals/datasets/real_rag_sample.jsonl)
 - Agent dataset: [`evals/datasets/agent_eval_sample.jsonl`](evals/datasets/agent_eval_sample.jsonl)
 - Badcases: [`evals/badcases/badcases.jsonl`](evals/badcases/badcases.jsonl)
 - Metric design: [`docs/eval_metrics.md`](docs/eval_metrics.md)
 - Badcase flow: [`docs/badcase_flow.md`](docs/badcase_flow.md)
+- Resume alignment: [`docs/interview/resume_alignment.md`](docs/interview/resume_alignment.md)
 
 ## Structure
 

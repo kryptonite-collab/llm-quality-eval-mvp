@@ -1,7 +1,6 @@
 import os
 import time
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Protocol
 
 DEFAULT_MOCK_MODEL = "mock-llm-local"
@@ -120,7 +119,6 @@ def build_qa_prompt(question: str, contexts: list[dict[str, Any]]) -> str:
 
 
 def load_llm_provider_config(provider: str | None = None) -> LLMProviderConfig:
-    load_local_env()
     provider_name = (provider or os.getenv("LLM_PROVIDER") or "mock").lower().strip()
     testing = os.getenv("TESTING", "").lower() == "true"
     run_real_tests = os.getenv("RUN_REAL_LLM_TESTS", "").lower() == "true"
@@ -159,26 +157,6 @@ def get_env_value(key: str) -> str | None:
 
     value = value.strip()
     return value or None
-
-
-def load_local_env() -> None:
-    current = Path.cwd()
-    for env_path in (current / ".env", current.parent / ".env"):
-        if not env_path.exists():
-            continue
-
-        with env_path.open("r", encoding="utf-8") as file:
-            for line in file:
-                stripped_line = line.strip()
-                if not stripped_line or stripped_line.startswith("#"):
-                    continue
-                if "=" not in stripped_line:
-                    continue
-
-                key, raw_value = stripped_line.split("=", 1)
-                value = raw_value.strip().strip('"').strip("'")
-                os.environ.setdefault(key.strip(), value)
-        return
 
 
 def get_llm_provider(provider: str | None = None) -> LLMProvider:

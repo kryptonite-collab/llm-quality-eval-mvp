@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from app.services.chroma_retriever import query_policy_contexts
 from app.services.llm_provider import get_llm_provider
 from app.services.prompt_templates import load_prompt_template, normalize_prompt_version
 
@@ -19,17 +20,10 @@ def build_mock_contexts(top_k: int) -> list[dict[str, Any]]:
     ][:top_k]
 
 
-def build_local_policy_contexts(top_k: int) -> list[dict[str, Any]]:
-    if not POLICY_SAMPLE_PATH.exists():
-        return []
-
-    return [
-        {
-            "source": "policy_sample.md",
-            "content": POLICY_SAMPLE_PATH.read_text(encoding="utf-8"),
-            "score": 1.0,
-        }
-    ][:top_k]
+def build_local_policy_contexts(
+    top_k: int, question: str = "policy sample"
+) -> list[dict[str, Any]]:
+    return query_policy_contexts(question=question, top_k=top_k)
 
 
 class LLMQAService:
@@ -50,12 +44,16 @@ class LLMQAService:
             if self.provider.config.provider == "mock":
                 contexts = build_mock_contexts(top_k=top_k)
             else:
-                contexts = build_local_policy_contexts(top_k=top_k)
+                contexts = build_local_policy_contexts(top_k=top_k, question=question)
 
         result = self.provider.generate(
             question=question,
             contexts=contexts,
-            prompt_template=self.prompt_template,
+            prompt_template=getattr(
+                self,
+                "prompt_template",
+                load_prompt_template("baseline"),
+            ),
         )
         return {
             "answer": result["answer"],
@@ -63,4 +61,5 @@ class LLMQAService:
             "latency_ms": result["latency_ms"],
             "model": result["model"],
             "provider": result["provider"],
+            "prompt_version": getattr(self, "prompt_version", "baseline"),
         }

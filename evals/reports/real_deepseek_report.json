@@ -1,0 +1,222 @@
+{
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "pass_rate": 1.0,
+  "avg_latency_ms": 2028.69,
+  "source_hit_rate": 1.0,
+  "badcase_count": 0,
+  "badcase_type_distribution": {},
+  "top_failed_cases": [],
+  "badcases": [],
+  "results": [
+    {
+      "id": "q001",
+      "question_id": "q001",
+      "question": "facts qa refund policy overview",
+      "category": "facts_qa",
+      "expected_behavior": "answer",
+      "badcase_type": null,
+      "answer": "The provided context does not contain any refund policy information; it only states that this is mock RAG content for local MVP testing.",
+      "expected_keywords": [
+        "refund",
+        "policy"
+      ],
+      "matched_keywords": [
+        "refund",
+        "policy"
+      ],
+      "missing_keywords": [],
+      "expected_source": "mock_policy.md",
+      "retrieved_sources": [
+        "mock_policy.md"
+      ],
+      "contexts": [
+        {
+          "source": "mock_policy.md",
+          "content": "This is a mock RAG context for local MVP testing.",
+          "score": 1.0
+        }
+      ],
+      "model": "deepseek/deepseek-v4-flash",
+      "score": 1.0,
+      "pass": true,
+      "keyword_score": 1.0,
+      "answer_keyword_recall": 1.0,
+      "source_hit": true,
+      "source_hit_at_k": true,
+      "latency_ms": 3995.96,
+      "failed_metrics": [],
+      "reason": "passed"
+    },
+    {
+      "id": "q002",
+      "question_id": "q002",
+      "question": "facts qa support review process",
+      "category": "facts_qa",
+      "expected_behavior": "answer",
+      "badcase_type": null,
+      "answer": "The context does not contain any information about a \"facts qa support review process.\" It only states that this is a mock RAG context for local MVP testing.",
+      "expected_keywords": [
+        "support",
+        "review"
+      ],
+      "matched_keywords": [
+        "support",
+        "review"
+      ],
+      "missing_keywords": [],
+      "expected_source": "mock_policy.md",
+      "retrieved_sources": [
+        "mock_policy.md"
+      ],
+      "contexts": [
+        {
+          "source": "mock_policy.md",
+          "content": "This is a mock RAG context for local MVP testing.",
+          "score": 1.0
+        }
+      ],
+      "model": "deepseek/deepseek-v4-flash",
+      "score": 1.0,
+      "pass": true,
+      "keyword_score": 1.0,
+      "answer_keyword_recall": 1.0,
+      "source_hit": true,
+      "source_hit_at_k": true,
+      "latency_ms": 1660.29,
+      "failed_metrics": [],
+      "reason": "passed"
+    },
+    {
+      "id": "q003",
+      "question_id": "q003",
+      "question": "facts qa eligibility window",
+      "category": "facts_qa",
+      "expected_behavior": "answer",
+      "badcase_type": null,
+      "answer": "The provided context does not contain any information about \"facts qa eligibility window.\"",
+      "expected_keywords": [
+        "eligibility",
+        "window"
+      ],
+      "matched_keywords": [
+        "eligibility",
+        "window"
+      ],
+      "missing_keywords": [],
+      "expected_source": "mock_policy.md",
+      "retrieved_sources": [
+        "mock_policy.md"
+      ],
+      "contexts": [
+        {
+          "source": "mock_policy.md",
+          "content": "This is a mock RAG context for local MVP testing.",
+          "score": 1.0
+        }
+      ],
+      "model": "deepseek/deepseek-v4-flash",
+      "score": 1.0,
+      "pass": true,
+      "keyword_score": 1.0,
+      "answer_keyword_recall": 1.0,
+      "source_hit": true,
+      "source_hit_at_k": true,
+      "latency_ms": 1707.36,
+      "failed_metrics": [],
+      "reason": "passed"
+    },
+    {
+      "id": "q004",
+      "question_id": "q004",
+      "question": "facts qa billing contact path",
+      "category": "facts_qa",
+      "expected_behavior": "answer",
+      "badcase_type": null,
+      "answer": "The provided context does not contain any information about billing contact paths. It is only a mock statement for testing.",
+      "expected_keywords": [
+        "billing",
+        "contact"
+      ],
+      "matched_keywords": [
+        "billing",
+        "contact"
+      ],
+      "missing_keywords": [],
+      "expected_source": "mock_policy.md",
+      "retrieved_sources": [
+        "mock_policy.md"
+      ],
+      "contexts": [
+        {
+          "source": "mock_policy.md",
+          "content": "This is a mock RAG context for local MVP testing.",
+          "score": 1.0
+        }
+      ],
+      "model": "deepseek/deepseek-v4-flash",
+      "score": 1.0,
+      "pass": true,
+      "keyword_score": 1.0,
+      "answer_keyword_recall": 1.0,
+      "source_hit": true,
+      "source_hit_at_k": true,
+      "latency_ms": 1576.03,
+      "failed_metrics": [],
+      "reason": "passed"
+    },
+    {
+      "id": "q005",
+      "question_id": "q005",
+      "question": "facts qa cancellation policy",
+      "category": "facts_qa",
+      "expected_behavior": "answer",
+      "badcase_type": null,
+      "answer": "The provided context does not contain any information about a cancellation policy.",
+      "expected_keywords": [
+        "cancellation",
+        "policy"
+      ],
+      "matched_keywords": [
+        "cancellation",
+        "policy"
+      ],
+      "missing_keywords": [],
+      "expected_source": "mock_policy.md",
+      "retrieved_sources": [
+        "mock_policy.md"
+      ],
+      "contexts": [
+        {
+          "source": "mock_policy.md",
+          "content": "This is a mock RAG context for local MVP testing.",
+          "score": 1.0
+        }
+      ],
+      "model": "deepseek/deepseek-v4-flash",
+      "score": 1.0,
+      "pass": true,
+      "keyword_score": 1.0,
+      "answer_keyword_recall": 1.0,
+      "source_hit": true,
+      "source_hit_at_k": true,
+      "latency_ms": 1203.82,
+      "failed_metrics": [],
+      "reason": "passed"
+    }
+  ],
+  "provider": "deepseek",
+  "model": "deepseek-v4-flash",
+  "generated_at": "2026-06-11T13:16:32.360659+00:00",
+  "config": {
+    "dataset_path": "D:\\projects\\llm-quality-eval-mvp\\evals\\datasets\\rag_qa_sample.jsonl",
+    "report_path": "D:\\projects\\llm-quality-eval-mvp\\evals\\reports\\real_deepseek_report.json",
+    "use_rag": true,
+    "top_k": 3,
+    "min_keyword_score": 1.0,
+    "provider": "deepseek",
+    "model": "deepseek-v4-flash",
+    "limit": 5
+  }
+}

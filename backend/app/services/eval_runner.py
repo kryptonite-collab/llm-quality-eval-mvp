@@ -107,6 +107,32 @@ def load_eval_dataset(dataset_path: str | Path) -> list[dict[str, Any]]:
     return samples
 
 
+def _get_sample_id(sample: dict[str, Any]) -> str | None:
+    sample_id = sample.get("case_id") or sample.get("id")
+    return str(sample_id) if sample_id is not None else None
+
+
+def _get_expected_sources(sample: dict[str, Any]) -> list[str]:
+    if "expected_sources" in sample:
+        return [str(source) for source in sample.get("expected_sources", []) if source]
+
+    expected_source = sample.get("expected_source")
+    return [str(expected_source)] if expected_source else []
+
+
+def _get_expected_behavior(sample: dict[str, Any]) -> str | None:
+    if sample.get("expected_behavior") is not None:
+        return str(sample["expected_behavior"])
+
+    if sample.get("expected_refusal") is True or sample.get("should_answer") is False:
+        return "refuse"
+
+    if sample.get("should_answer") is True:
+        return "answer"
+
+    return None
+
+
 def _extract_retrieved_sources(contexts: list[dict[str, Any]]) -> list[str]:
     sources: list[str] = []
 
@@ -180,6 +206,13 @@ def _build_top_failed_cases(
     ]
 
 
+def _split_failure_reasons(reason: str) -> list[str]:
+    if not reason or reason == "passed":
+        return []
+
+    return [item.strip() for item in reason.split(";") if item.strip()]
+
+
 def run_eval_dataset(
     dataset_path: str | Path | None = None,
     report_path: str | Path | None = None,
@@ -221,14 +254,18 @@ def run_eval_dataset(
     total_latency = 0.0
 
     for sample in samples:
+        sample_id = _get_sample_id(sample)
+        expected_keywords = sample.get("expected_keywords", [])
+        expected_sources = _get_expected_sources(sample)
+        expected_source = expected_sources[0] if expected_sources else None
+        expected_behavior = _get_expected_behavior(sample)
+
         qa_result = qa_service.ask(
             question=sample["question"],
             use_rag=actual_use_rag,
             top_k=actual_top_k,
         )
 
-        expected_keywords = sample.get("expected_keywords", [])
-        expected_source = sample.get("expected_source")
         retrieved_sources = _extract_retrieved_sources(qa_result["contexts"])
 
         eval_result = evaluate_qa_result(
@@ -238,21 +275,29 @@ def run_eval_dataset(
             expected_source=expected_source,
             latency_ms=qa_result["latency_ms"],
             min_keyword_score=actual_min_keyword_score,
-            expected_behavior=sample.get("expected_behavior"),
+            expected_behavior=expected_behavior,
         )
         badcase_type = _infer_badcase_type(sample, eval_result)
+        failure_reasons = _split_failure_reasons(eval_result["reason"])
 
         total_latency += float(qa_result["latency_ms"])
 
         item_result = {
-            "id": sample.get("id"),
-            "question_id": sample.get("id"),
+            "id": sample_id,
+            "case_id": sample_id,
+            "question_id": sample_id,
             "question": sample["question"],
+            "prompt_version": actual_prompt_version,
+            "provider": provider_config.provider,
             "category": sample.get("category"),
-            "expected_behavior": sample.get("expected_behavior"),
+            "expected_behavior": expected_behavior,
+            "should_answer": sample.get("should_answer"),
+            "expected_refusal": sample.get("expected_refusal"),
+            "notes": sample.get("notes"),
             "badcase_type": badcase_type,
             "answer": qa_result["answer"],
             "expected_keywords": expected_keywords,
+            "expected_sources": expected_sources,
             "matched_keywords": eval_result["matched_keywords"],
             "missing_keywords": eval_result["missing_keywords"],
             "expected_source": expected_source,
@@ -260,6 +305,10 @@ def run_eval_dataset(
             "contexts": qa_result["contexts"],
             "model": qa_result["model"],
             "score": eval_result["keyword_score"],
+            "keyword_recall": eval_result["answer_keyword_recall"],
+            "source_hit": eval_result["source_hit_at_k"],
+            "passed": eval_result["pass"],
+            "failure_reasons": failure_reasons,
             **eval_result,
         }
 
@@ -268,22 +317,36 @@ def run_eval_dataset(
         if not eval_result["pass"]:
             badcases.append(
                 {
-                    "id": sample.get("id"),
-                    "question_id": sample.get("id"),
+                    "id": sample_id,
+                    "case_id": sample_id,
+                    "question_id": sample_id,
                     "question": sample["question"],
+                    "prompt_version": actual_prompt_version,
+                    "provider": provider_config.provider,
                     "category": sample.get("category"),
-                    "expected_behavior": sample.get("expected_behavior"),
+                    "expected_behavior": expected_behavior,
+                    "should_answer": sample.get("should_answer"),
+                    "expected_refusal": sample.get("expected_refusal"),
+                    "notes": sample.get("notes"),
                     "badcase_type": badcase_type,
                     "answer": qa_result["answer"],
                     "expected_keywords": expected_keywords,
+                    "expected_sources": expected_sources,
                     "missing_keywords": eval_result["missing_keywords"],
                     "expected_source": expected_source,
                     "retrieved_sources": retrieved_sources,
                     "score": eval_result["keyword_score"],
+                    "keyword_recall": eval_result["answer_keyword_recall"],
+                    "source_hit": eval_result["source_hit_at_k"],
+                    "refusal_when_answer_expected": eval_result["refusal_when_answer_expected"],
+                    "passed": eval_result["pass"],
                     "answer_keyword_recall": eval_result["answer_keyword_recall"],
                     "source_hit_at_k": eval_result["source_hit_at_k"],
                     "failed_metrics": eval_result["failed_metrics"],
+                    "failure_reasons": failure_reasons,
                     "reason": eval_result["reason"],
+                    "latency_ms": eval_result["latency_ms"],
+                    "model": qa_result["model"],
                     "created_at": datetime.now(UTC).isoformat(),
                 }
             )

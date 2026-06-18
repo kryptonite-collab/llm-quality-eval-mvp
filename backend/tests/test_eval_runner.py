@@ -134,6 +134,36 @@ def test_run_eval_dataset_records_prompt_version(tmp_path):
     assert report["provider"] == "mock"
 
 
+def test_run_eval_dataset_records_case_level_evidence(tmp_path):
+    dataset_path = tmp_path / "sample.jsonl"
+    report_path = tmp_path / "latest_report.json"
+
+    dataset_path.write_text(
+        '{"id":"q001","question":"test evidence","expected_keywords":["test evidence"],"expected_source":"mock_policy.md","category":"facts_qa","expected_behavior":"answer"}\n',
+        encoding="utf-8",
+    )
+
+    report = run_eval_dataset(
+        dataset_path=dataset_path,
+        report_path=report_path,
+        use_rag=True,
+        prompt_version="baseline",
+    )
+    result = report["results"][0]
+
+    assert result["case_id"] == "q001"
+    assert result["prompt_version"] == "baseline"
+    assert result["provider"] == "mock"
+    assert result["model"] == "mock-llm-local"
+    assert result["expected_sources"] == ["mock_policy.md"]
+    assert result["keyword_recall"] == 1.0
+    assert result["source_hit"] is True
+    assert result["refusal_when_answer_expected"] is False
+    assert result["passed"] is True
+    assert result["failure_reasons"] == []
+    assert isinstance(result["latency_ms"], int | float)
+
+
 def test_run_eval_dataset_reports_multiple_badcase_types(tmp_path):
     dataset_path = tmp_path / "sample.jsonl"
     report_path = tmp_path / "latest_report.json"
